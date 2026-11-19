@@ -2,6 +2,11 @@ name: Build macOS app
 
 on:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner label (macos-26, macos-26-xlarge, macos-26-intel ...)
+        default: macos-26
+        required: false
   push:
     branches: [main]
 
@@ -12,8 +17,9 @@ concurrency:
 jobs:
   macos:
     # ColorfulX 6.2.1 needs swift-tools-version 6.2, so the runner must ship Xcode 26
-    # (macos-15 images top out at Xcode 16).
-    runs-on: macos-26
+    # (macos-15 images top out at Xcode 16). The arm64 macos-26 label often has no
+    # capacity, so workflow_dispatch can point a manual run at another label.
+    runs-on: ${{ inputs.runner || 'macos-26' }}
     timeout-minutes: 180
 
     steps:
