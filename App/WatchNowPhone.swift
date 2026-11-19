@@ -6,7 +6,9 @@ import TVCore
 /// own cover, which tints the page, and every section below is a row of covers under a heading that opens all of it.
 struct WatchNowPhonePage: View {
     @Environment(Store.self) private var store
-    private var openSection = SectionOpener()
+    // Not private: a private stored property makes the memberwise initializer private, and
+    // HomeView builds this page with (config:sections:).
+    var openSection = SectionOpener()
     let config: Subscription
     let sections: Set<HomeSection>
     @State private var hero = WatchNowHeroState()

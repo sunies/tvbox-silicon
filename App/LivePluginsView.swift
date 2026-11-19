@@ -249,9 +249,9 @@ struct LivePluginOfferSection: View {
         }
     }
 
-    private enum State { case available, update, installed }
+    private enum InstallState { case available, update, installed }
 
-    private func state(_ entry: LivePlugins.Entry) -> State {
+    private func state(_ entry: LivePlugins.Entry) -> InstallState {
         guard let current = LivePlugins.shared.installed(entry.pluginId) else { return .available }
         return current.version == entry.version && (entry.sha256.isEmpty || entry.sha256 == current.sha256) ? .installed : .update
     }
