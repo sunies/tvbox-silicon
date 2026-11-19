@@ -19,7 +19,7 @@ settings:
     MARKETING_VERSION: '1.8.25'
     CURRENT_PROJECT_VERSION: '63'
     GENERATE_INFOPLIST_FILE: YES
-    INFOPLIST_KEY_CFBundleDisplayName: Yingxia Fork
+    INFOPLIST_KEY_CFBundleDisplayName: 光影
     INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.entertainment
     ENABLE_USER_SCRIPT_SANDBOXING: NO
     CODE_SIGN_STYLE: Automatic
@@ -52,7 +52,8 @@ targetTemplates:
     info:
       path: Config/Info-${target_name}.plist
       properties:
-        CFBundleDisplayName: Yingxia Fork
+        CFBundleDisplayName: 光影
+        CFBundleName: 光影
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, zh-Hans, zh-Hant, ja]
         NSAppTransportSecurity:

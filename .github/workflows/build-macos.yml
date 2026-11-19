@@ -11,7 +11,9 @@ concurrency:
 
 jobs:
   macos:
-    runs-on: macos-15
+    # ColorfulX 6.2.1 needs swift-tools-version 6.2, so the runner must ship Xcode 26
+    # (macos-15 images top out at Xcode 16).
+    runs-on: macos-26
     timeout-minutes: 180
 
     steps:
@@ -43,7 +45,9 @@ jobs:
           Scripts/build-apple-libass.sh
 
       - name: Generate Xcode project
-        run: xcodegen generate
+        run: |
+          xcodebuild -version
+          xcodegen generate
 
       - name: Build app
         run: |
@@ -65,10 +69,10 @@ jobs:
           echo "Built: $APP"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" "Yingxia-Fork-${GITHUB_SHA::7}.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "guangying-macos-${GITHUB_SHA::7}.zip"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Yingxia-Fork-macOS
-          path: Yingxia-Fork-*.zip
+          name: guangying-macos
+          path: guangying-macos-*.zip
           retention-days: 14
