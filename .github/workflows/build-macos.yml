@@ -11,7 +11,9 @@ on:
     branches: [main]
 
 concurrency:
-  group: macos-build
+  # A push rebuilds replace each other, while a manual run on another runner label (an Intel
+  # machine, say) gets its own group so it does not cancel the arm64 build and vice versa.
+  group: macos-build-${{ inputs.runner || 'main' }}
   cancel-in-progress: true
 
 jobs:
