@@ -25,10 +25,12 @@ extension Subscription {
     func sniffingScripts(http: HTTPClient) async -> Subscription {
         let pending = sites.indices.filter { sites[$0].needsSniffing }
         guard !pending.isEmpty else { return self }
-        var sites = sites
+        // Not `var sites = sites`: the shadowed name makes every closure above capture the
+        // variable rather than the property, which Swift 6.2 rejects ("captured before declared").
+        var updated = sites
         let found = await withTaskGroup(of: (Int, SourceRuntime?).self) { group in
             for index in pending {
-                let site = sites[index], origin = origin
+                let site = updated[index], origin = origin
                 group.addTask {
                     guard let url = try? site.scriptURL(origin: origin),
                           let (data, _) = try? await http.get(url) else { return (index, nil) }
@@ -40,9 +42,9 @@ extension Subscription {
             return found
         }
         for (index, runtime) in found {
-            sites[index].detectedRuntime = runtime
-            Diagnostics.shared.record(.info, "subscription", "sniffed source=\(sites[index].key) host=\(URL(string: sites[index].api)?.host() ?? "-") runtime=\(runtime.map { "\($0)" } ?? "unknown")")
+            updated[index].detectedRuntime = runtime
+            Diagnostics.shared.record(.info, "subscription", "sniffed source=\(updated[index].key) host=\(URL(string: updated[index].api)?.host() ?? "-") runtime=\(runtime.map { "\($0)" } ?? "unknown")")
         }
-        return Subscription(origin: origin, importedAt: importedAt, sites: sites, lives: lives, raw: raw)
+        return Subscription(origin: origin, importedAt: importedAt, sites: updated, lives: lives, raw: raw)
     }
 }
