@@ -48,6 +48,7 @@ jobs:
 
       # FFmpeg + libass take about 21 of the run's 23 minutes, and the recipes change rarely.
       - name: Restore FFmpeg and libass builds
+        id: vendor
         uses: actions/cache@v4
         with:
           path: |
@@ -67,6 +68,17 @@ jobs:
         run: |
           Scripts/build-apple-ffmpeg.sh
           Scripts/build-apple-libass.sh
+
+      # Saved right here, not by the cache action's post step: a compile error below must not throw the
+      # 21-minute vendor build away, or every retry pays for it again.
+      - name: Save FFmpeg and libass builds
+        if: steps.vendor.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/Library/Caches/tvbox-ffmpeg/${{ env.FFMPEG_SIG }}
+            ~/Library/Caches/tvbox-libass/${{ env.LIBASS_SIG }}
+          key: vendor-${{ env.FFMPEG_SIG }}-${{ env.LIBASS_SIG }}
 
       - name: Generate Xcode project
         run: |
