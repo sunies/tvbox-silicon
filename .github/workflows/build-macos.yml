@@ -31,6 +31,22 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      - name: Read build signatures
+        run: |
+          # The vendor scripts cache one build per recipe, keyed by a hash of the lines between
+          # "# RECIPE" and "# END". Exposing that key lets Actions keep the built xcframeworks.
+          echo "FFMPEG_SIG=$(sed -n '/^# RECIPE$/,/^# END$/p' Scripts/build-apple-ffmpeg.sh | shasum -a 256 | cut -c1-16)" >> "$GITHUB_ENV"
+          echo "LIBASS_SIG=$(sed -n '/^# RECIPE$/,/^# END$/p' Scripts/build-apple-libass.sh | shasum -a 256 | cut -c1-16)" >> "$GITHUB_ENV"
+
+      # FFmpeg + libass take about 21 of the run's 23 minutes, and the recipes change rarely.
+      - name: Restore FFmpeg and libass builds
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/tvbox-ffmpeg/${{ env.FFMPEG_SIG }}
+            ~/Library/Caches/tvbox-libass/${{ env.LIBASS_SIG }}
+          key: vendor-${{ env.FFMPEG_SIG }}-${{ env.LIBASS_SIG }}
+
       - name: Build hosts (Java, Node, Python)
         env:
           JAVA_HOME: ${{ env.JAVA_HOME }}
