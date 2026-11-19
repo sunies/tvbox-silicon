@@ -1,0 +1,39 @@
+name: Retry macOS build when no runner was available
+
+# GitHub's hosted macOS arm64 pool is regularly empty ("The job was not acquired by Runner of
+# type hosted"). Those jobs fail before running a single step, so they are worth another try;
+# a build that actually compiled and failed is not.
+on:
+  workflow_run:
+    workflows: [Build macOS app]
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  retry:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rerun unless the job actually ran
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: |
+          ran=$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" \
+            --jq '[.jobs[].steps | length] | max // 0')
+          echo "attempt=$ATTEMPT steps_ran=$ran"
+          if [ "$ran" != "0" ]; then
+            echo "The job ran steps, so this was a real failure. Not retrying."
+            exit 0
+          fi
+          if [ "$ATTEMPT" -ge 10 ]; then
+            echo "Gave up after $ATTEMPT attempts: no arm64 runner in reach."
+            exit 0
+          fi
+          gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/rerun"
+          echo "Rerun queued."
